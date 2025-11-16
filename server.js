@@ -17,45 +17,21 @@ app.get("/", (req, res) => {
 });
 
 app.get("/api/movies", (req, res) => {
-console.log("api/movies called");
+    console.log("api/movies called");
     const movies = [
-        
+
         {
             id: 1,
-            name: "The Silence of The Lambs",
-            director: "Jonathan Demme",
-            releaseDate: "February 14, 1991",
-            rottenTomato: "Rating on Rotten Tomato: 95%",
-            img: "/images/silence-of-the-lambs.jpg"
-
+            title: "New Demon Slayer Movie",
+            description: "This movie was so good. I definitely recommend...",
+            img: "/images/demon-slayer.png"
         },
         {
             id: 2,
-            name: "The Shining",
-            director: "Stephen King",
-            releaseDate: "May 23, 1980",
-            rottenTomato: "Rating on Rotten Tomato: 84%",
-            img: "/images/theShining.jpg"
-
+            title: "Negative Reviews on the movie 'Him'",
+            description: "There have been lots of opinions on the new Him movie...",
+            img: "/images/him.jpg"
         },
-        {
-            id: 3,
-            name: "Orphan",
-            director: "Jaume Collet-Serra",
-            releaseDate: "July 24, 2009",
-            rottenTomato: "Rating on Rotten Tomato: 79%",
-            img: "/images/orphan.jpg"
-
-        },
-        {
-            id: 4,
-            name: "Insidious",
-            director: "James Wan",
-            releaseDate: "April 1, 2011",
-            rottenTomato: "Rating on Rotten Tomato: 66%",
-            img: "/images/insidious.jpg"
-
-        }
     ];
     res.json(movies);
 });
