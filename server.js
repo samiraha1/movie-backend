@@ -8,24 +8,20 @@ const fs = require("fs");
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
 app.use(express.static(path.join(__dirname, "public")));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // For FormData parsing (multer handles it, but good to have)
 
-// Multer configuration for file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const uploadPath = path.join(__dirname, "public", "images");
-        // Create images directory if it doesn't exist
         if (!fs.existsSync(uploadPath)) {
             fs.mkdirSync(uploadPath, { recursive: true });
         }
         cb(null, uploadPath);
     },
     filename: (req, file, cb) => {
-        // Generate unique filename: timestamp-originalname
         const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
         const ext = path.extname(file.originalname);
         cb(null, file.fieldname + "-" + uniqueSuffix + ext);
@@ -35,15 +31,13 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB max file size
+        fileSize: 5 * 1024 * 1024
     },
     fileFilter: (req, file, cb) => {
-        // Only validate if a file is provided (file upload is optional)
         if (!file) {
             return cb(null, true);
         }
         
-        // Accept only image files
         const allowedTypes = /jpeg|jpg|png|gif|webp/;
         const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
         const mimetype = allowedTypes.test(file.mimetype);
@@ -56,7 +50,6 @@ const upload = multer({
     }
 });
 
-// Movies array - in-memory storage (you can convert to database later)
 let movies = [
     {
         id: 1,
@@ -72,7 +65,6 @@ let movies = [
     },
 ];
 
-// Joi validation schema - MUST MATCH frontend VALIDATION_RULES
 const movieSchema = Joi.object({
     name: Joi.string()
         .min(1)
@@ -94,7 +86,6 @@ const movieSchema = Joi.object({
             "string.max": "Description must be no more than 2000 characters",
             "any.required": "Description is required"
         }),
-    // img is optional for file uploads, handled separately
 });
 
 app.get("/", (req, res) => {
@@ -102,25 +93,21 @@ app.get("/", (req, res) => {
     console.log(__dirname);
 });
 
-// GET all movies
 app.get("/api/movies", (req, res) => {
     console.log("GET /api/movies called");
     res.json(movies);
 });
 
-// Test endpoint to verify server is running
 app.get("/api/test", (req, res) => {
     res.json({ message: "Backend is running!", timestamp: new Date().toISOString() });
 });
 
-// POST handler function - shared for both routes
 const handlePostMovie = (req, res) => {
     console.log("POST /api/movies called");
     
     try {
         let movieData;
         
-        // If there's a file upload (FormData), get data from req.body and req.file
         if (req.file) {
             movieData = {
                 name: req.body.name || req.body.title, // Accept both 'name' and 'title'
@@ -128,15 +115,12 @@ const handlePostMovie = (req, res) => {
                 img: `/images/${req.file.filename}` // Path to uploaded file
             };
         } else {
-            // JSON request - data is in req.body
             movieData = req.body;
         }
         
-        // Validate with Joi
         const { error, value } = movieSchema.validate(movieData, { abortEarly: false });
         
         if (error) {
-            // Return validation errors
             const errorMessages = error.details.map(detail => detail.message).join(", ");
             return res.status(400).json({
                 error: "Validation error",
@@ -145,20 +129,17 @@ const handlePostMovie = (req, res) => {
             });
         }
         
-        // Create new movie object
         const newMovie = {
             id: movies.length > 0 ? Math.max(...movies.map(m => m.id)) + 1 : 1,
-            title: value.name, // Store as 'title' to match GET response format
+            title: value.name, 
             description: value.description,
-            img: movieData.img || "" // Use uploaded image path or empty string
+            img: movieData.img || "" 
         };
         
-        // Add to movies array
         movies.push(newMovie);
         
         console.log("New movie added:", newMovie);
         
-        // Return created movie with 201 status
         res.status(201).json(newMovie);
         
     } catch (err) {
@@ -170,13 +151,9 @@ const handlePostMovie = (req, res) => {
     }
 };
 
-// POST new movie - handles both JSON and FormData with file upload
-// Support both with and without trailing slash
 app.post("/api/movies/", upload.single("img"), handlePostMovie);
 app.post("/api/movies", upload.single("img"), handlePostMovie);
 
-// Error handling middleware for multer (file upload errors)
-// This must come BEFORE the 404 handler but AFTER routes
 app.use((err, req, res, next) => {
     console.error("Error middleware caught:", err.message);
     
@@ -193,7 +170,6 @@ app.use((err, req, res, next) => {
         });
     }
     
-    // Handle other errors (like validation errors from multer fileFilter)
     if (err) {
         return res.status(400).json({
             error: "Validation error",
@@ -204,7 +180,6 @@ app.use((err, req, res, next) => {
     next();
 });
 
-// Handle 404 for undefined routes
 app.use((req, res) => {
     res.status(404).json({
         error: "Route not found",
@@ -212,7 +187,6 @@ app.use((req, res) => {
     });
 });
 
-// Start server
 app.listen(PORT, () => {
     console.log(`Server listening on http://localhost:${PORT}`);
     console.log(`GET endpoint: http://localhost:${PORT}/api/movies`);
