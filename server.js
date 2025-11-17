@@ -94,7 +94,12 @@ const movieSchema = Joi.object({
             "string.max": "Description must be no more than 2000 characters",
             "any.required": "Description is required"
         }),
-    // img is optional for file uploads, handled separately
+    img: Joi.string()
+        .optional()
+        .allow("") // Allow empty string for img
+        .messages({
+            "string.base": "Image path must be a string"
+        })
 });
 
 app.get("/", (req, res) => {
