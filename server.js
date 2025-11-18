@@ -121,18 +121,23 @@ app.get("/api/test", (req, res) => {
 // POST handler function - shared for both routes
 const handlePostMovie = (req, res) => {
     console.log("POST /api/movies called");
+    console.log("Request body:", req.body);
+    console.log("Request file:", req.file ? req.file.filename : "No file");
     
     try {
         let movieData;
         
         // If there's a file upload (FormData), get data from req.body and req.file
         if (req.file) {
+            console.log("File uploaded:", req.file.filename, "Size:", req.file.size);
             movieData = {
                 name: req.body.name || req.body.title, // Accept both 'name' and 'title'
                 description: req.body.description,
                 img: `/images/${req.file.filename}` // Path to uploaded file
             };
+            console.log("Movie data with image:", movieData);
         } else {
+            console.log("No file uploaded, using JSON body");
             // JSON request - data is in req.body
             movieData = req.body;
         }
