@@ -119,11 +119,7 @@ const handlePostMovie = (req, res) => {
             };
             console.log("Movie data with image:", movieData);
         } else {
-<<<<<<< HEAD
-=======
             console.log("No file uploaded, using JSON body");
-            // JSON request - data is in req.body
->>>>>>> 03fc16df73a376fe4bb2faf805e6765555a011f4
             movieData = req.body;
         }
         
