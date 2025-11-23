@@ -104,17 +104,26 @@ app.get("/api/test", (req, res) => {
 
 const handlePostMovie = (req, res) => {
     console.log("POST /api/movies called");
+    console.log("Request body:", req.body);
+    console.log("Request file:", req.file ? req.file.filename : "No file");
     
     try {
         let movieData;
         
         if (req.file) {
+            console.log("File uploaded:", req.file.filename, "Size:", req.file.size);
             movieData = {
                 name: req.body.name || req.body.title, // Accept both 'name' and 'title'
                 description: req.body.description,
                 img: `/images/${req.file.filename}` // Path to uploaded file
             };
+            console.log("Movie data with image:", movieData);
         } else {
+<<<<<<< HEAD
+=======
+            console.log("No file uploaded, using JSON body");
+            // JSON request - data is in req.body
+>>>>>>> 03fc16df73a376fe4bb2faf805e6765555a011f4
             movieData = req.body;
         }
         
