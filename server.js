@@ -140,7 +140,7 @@ const handlePostMovie = (req, res) => {
         
         console.log("New movie added:", newMovie);
         
-        res.status(201).json(newMovie);
+        res.status(200).json(newMovie);
         
     } catch (err) {
         console.error("Error in POST /api/movies:", err);
