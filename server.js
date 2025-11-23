@@ -8,18 +8,15 @@ const fs = require("fs");
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
 app.use(express.static(path.join(__dirname, "public")));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // For FormData parsing (multer handles it, but good to have)
 
-// Multer configuration for file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         try {
             const uploadPath = path.join(__dirname, "public", "images");
-            // Create images directory if it doesn't exist
             if (!fs.existsSync(uploadPath)) {
                 fs.mkdirSync(uploadPath, { recursive: true });
             }
@@ -31,7 +28,6 @@ const storage = multer.diskStorage({
     },
     filename: (req, file, cb) => {
         try {
-            // Generate unique filename: timestamp-originalname
             const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
             const ext = path.extname(file.originalname);
             cb(null, file.fieldname + "-" + uniqueSuffix + ext);
@@ -45,19 +41,17 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB max file size
+        fileSize: 5 * 1024 * 1024
     },
     fileFilter: (req, file, cb) => {
-        // Only validate if a file is provided (file upload is optional)
         if (!file) {
             return cb(null, true);
         }
-        
-        // Accept only image files
+
         const allowedTypes = /jpeg|jpg|png|gif|webp/;
         const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
         const mimetype = allowedTypes.test(file.mimetype);
-        
+
         if (mimetype && extname) {
             return cb(null, true);
         } else {
@@ -66,7 +60,6 @@ const upload = multer({
     }
 });
 
-// Movies array - in-memory storage (you can convert to database later)
 let movies = [
     {
         id: 1,
@@ -82,7 +75,6 @@ let movies = [
     },
 ];
 
-// Joi validation schema - MUST MATCH frontend VALIDATION_RULES
 const movieSchema = Joi.object({
     name: Joi.string()
         .min(1)
@@ -106,7 +98,7 @@ const movieSchema = Joi.object({
         }),
     img: Joi.string()
         .optional()
-        .allow("") // Allow empty string for img
+        .allow("")
         .messages({
             "string.base": "Image path must be a string"
         })
@@ -117,27 +109,23 @@ app.get("/", (req, res) => {
     console.log(__dirname);
 });
 
-// GET all movies
 app.get("/api/movies", (req, res) => {
     console.log("GET /api/movies called");
     res.json(movies);
 });
 
-// Test endpoint to verify server is running
 app.get("/api/test", (req, res) => {
     res.json({ message: "Backend is running!", timestamp: new Date().toISOString() });
 });
 
-// POST handler function - shared for both routes
 const handlePostMovie = async (req, res) => {
     try {
         console.log("POST /api/movies called");
         console.log("Request body:", req.body);
         console.log("Request file:", req.file ? req.file.filename : "No file");
-        
+
         let movieData;
-        
-        // If there's a file upload (FormData), get data from req.body and req.file
+
         if (req.file) {
             console.log("File uploaded:", req.file.filename, "Size:", req.file.size);
             movieData = {
@@ -148,15 +136,12 @@ const handlePostMovie = async (req, res) => {
             console.log("Movie data with image:", movieData);
         } else {
             console.log("No file uploaded, using JSON body");
-            // JSON request - data is in req.body
             movieData = req.body;
         }
-        
-        // Validate with Joi
+
         const { error, value } = movieSchema.validate(movieData, { abortEarly: false });
-        
+
         if (error) {
-            // Return validation errors
             const errorMessages = error.details.map(detail => detail.message).join(", ");
             return res.status(400).json({
                 error: "Validation error",
@@ -164,35 +149,31 @@ const handlePostMovie = async (req, res) => {
                 details: error.details
             });
         }
-        
-        // Create new movie object
-        // Safely get the next ID
+
+
         let nextId = 1;
         if (movies.length > 0) {
             const maxId = Math.max(...movies.map(m => (m && m.id) ? m.id : 0));
             nextId = maxId + 1;
         }
-        
+
         const newMovie = {
             id: nextId,
-            title: value.name || value.title || "", // Store as 'title' to match GET response format
+            title: value.name || value.title || "",
             description: value.description || "",
-            img: movieData.img || "" // Use uploaded image path or empty string
+            img: movieData.img || ""
         };
-        
-        // Add to movies array
+
         movies.push(newMovie);
-        
+
         console.log("New movie added:", newMovie);
-        
-        // Return created movie with 201 status
+
         return res.status(200).json(newMovie);
-        
+
     } catch (err) {
         console.error("Error in POST /api/movies:", err);
         console.error("Stack trace:", err.stack);
-        
-        // Ensure we haven't already sent a response
+
         if (!res.headersSent) {
             return res.status(500).json({
                 error: "Internal server error",
@@ -202,23 +183,51 @@ const handlePostMovie = async (req, res) => {
     }
 };
 
-// POST new movie - handles both JSON and FormData with file upload
-// Support both with and without trailing slash
+app.put("/api/movies/:id", upload.single("img"), (req, res) => {
+    let movie = movies.find(h) => h._id === parseInt(req.params.id);
+
+    if (!movie) res.status(400).send("blog with given id was not found");
+
+    const result = validateBlog(req.body);
+
+    if (result.error) {
+        res.status(400).send(result.error.details[0].message);
+        return;
+    }
+
+    movie.name = req.body.name;
+    movie.description = req.body.description;
+
+    if (req.file) {
+        movie.main_image = "images/" + req.file.filename;
+    }
+
+    res.send(house);
+});
+app.delete("/api/movies/:id", (req, res) => {
+    const movie = movies.find((h) => h._id === parseInt(req.params.id));
+
+    if (!movie) {
+        res.status(404).send("The blog with the given id was not found");
+    }
+
+    const index = movies.indexOf(movie);
+    movies.splice(index, 1);
+    res.send(movie);
+});
+
 app.post("/api/movies/", upload.single("img"), handlePostMovie);
 app.post("/api/movies", upload.single("img"), handlePostMovie);
 
-// Error handling middleware for multer (file upload errors)
-// This must come BEFORE the 404 handler but AFTER routes
 app.use((err, req, res, next) => {
-    // Don't try to send a response if headers have already been sent
     if (res.headersSent) {
         console.error("Error occurred but response already sent:", err.message);
         return next(err);
     }
-    
+
     console.error("Error middleware caught:", err.message);
     console.error("Error stack:", err.stack);
-    
+
     if (err instanceof multer.MulterError) {
         if (err.code === "LIMIT_FILE_SIZE") {
             return res.status(400).json({
@@ -231,19 +240,17 @@ app.use((err, req, res, next) => {
             message: err.message
         });
     }
-    
-    // Handle other errors (like validation errors from multer fileFilter)
+
     if (err) {
         return res.status(400).json({
             error: "Validation error",
             message: err.message
         });
     }
-    
+
     next();
 });
 
-// Handle 404 for undefined routes
 app.use((req, res) => {
     res.status(404).json({
         error: "Route not found",
@@ -253,12 +260,10 @@ app.use((req, res) => {
 
 process.on("unhandledRejection", (err) => {
     console.error("Unhandled Promise Rejection:", err);
-    // Don't exit the process, just log it
 });
 
 process.on("uncaughtException", (err) => {
     console.error("Uncaught Exception:", err);
-    // Give the process a chance to log the error before exiting
     setTimeout(() => {
         process.exit(1);
     }, 1000);
