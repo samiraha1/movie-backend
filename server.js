@@ -8,10 +8,11 @@ const fs = require("fs");
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Middleware
 app.use(express.static(path.join(__dirname, "public")));
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // For FormData parsing (multer handles it, but good to have)
+app.use(express.urlencoded({ extended: true })); 
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -41,17 +42,17 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 5 * 1024 * 1024
+        fileSize: 5 * 1024 * 1024 
     },
     fileFilter: (req, file, cb) => {
         if (!file) {
             return cb(null, true);
         }
-
+        
         const allowedTypes = /jpeg|jpg|png|gif|webp/;
         const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
         const mimetype = allowedTypes.test(file.mimetype);
-
+        
         if (mimetype && extname) {
             return cb(null, true);
         } else {
@@ -123,24 +124,24 @@ const handlePostMovie = async (req, res) => {
         console.log("POST /api/movies called");
         console.log("Request body:", req.body);
         console.log("Request file:", req.file ? req.file.filename : "No file");
-
+        
         let movieData;
-
+        
         if (req.file) {
             console.log("File uploaded:", req.file.filename, "Size:", req.file.size);
             movieData = {
-                name: req.body.name || req.body.title, // Accept both 'name' and 'title'
+                name: req.body.name || req.body.title, 
                 description: req.body.description,
-                img: `/images/${req.file.filename}` // Path to uploaded file
+                img: `/images/${req.file.filename}` 
             };
             console.log("Movie data with image:", movieData);
         } else {
             console.log("No file uploaded, using JSON body");
             movieData = req.body;
         }
-
+        
         const { error, value } = movieSchema.validate(movieData, { abortEarly: false });
-
+        
         if (error) {
             const errorMessages = error.details.map(detail => detail.message).join(", ");
             return res.status(400).json({
@@ -149,31 +150,30 @@ const handlePostMovie = async (req, res) => {
                 details: error.details
             });
         }
-
-
+        
         let nextId = 1;
         if (movies.length > 0) {
             const maxId = Math.max(...movies.map(m => (m && m.id) ? m.id : 0));
             nextId = maxId + 1;
         }
-
+        
         const newMovie = {
             id: nextId,
-            title: value.name || value.title || "",
+            title: value.name || value.title || "", 
             description: value.description || "",
-            img: movieData.img || ""
+            img: movieData.img || "" 
         };
-
+        
         movies.push(newMovie);
-
+        
         console.log("New movie added:", newMovie);
-
-        return res.status(200).json(newMovie);
-
+        
+        return res.status(201).json(newMovie);
+        
     } catch (err) {
         console.error("Error in POST /api/movies:", err);
         console.error("Stack trace:", err.stack);
-
+        
         if (!res.headersSent) {
             return res.status(500).json({
                 error: "Internal server error",
@@ -183,51 +183,136 @@ const handlePostMovie = async (req, res) => {
     }
 };
 
-app.put("/api/movies/:id", upload.single("img"), (req, res) => {
-    let movie = movies.find(h) => h._id === parseInt(req.params.id);
-
-    if (!movie) res.status(400).send("blog with given id was not found");
-
-    const result = validateBlog(req.body);
-
-    if (result.error) {
-        res.status(400).send(result.error.details[0].message);
-        return;
-    }
-
-    movie.name = req.body.name;
-    movie.description = req.body.description;
-
-    if (req.file) {
-        movie.main_image = "images/" + req.file.filename;
-    }
-
-    res.send(house);
-});
-app.delete("/api/movies/:id", (req, res) => {
-    const movie = movies.find((h) => h._id === parseInt(req.params.id));
-
-    if (!movie) {
-        res.status(404).send("The blog with the given id was not found");
-    }
-
-    const index = movies.indexOf(movie);
-    movies.splice(index, 1);
-    res.send(movie);
-});
-
 app.post("/api/movies/", upload.single("img"), handlePostMovie);
 app.post("/api/movies", upload.single("img"), handlePostMovie);
+
+const handlePutMovie = async (req, res) => {
+    try {
+        const movieId = parseInt(req.params.id);
+        console.log(`PUT /api/movies/${movieId} called`);
+        console.log("Request body:", req.body);
+        console.log("Request file:", req.file ? req.file.filename : "No file");
+        
+        const movieIndex = movies.findIndex(m => m && m.id === movieId);
+        
+        if (movieIndex === -1) {
+            return res.status(404).json({
+                error: "Movie not found",
+                message: `Movie with ID ${movieId} does not exist`
+            });
+        }
+        
+        let movieData;
+        const existingImg = movies[movieIndex].img || "";
+        
+        if (req.file) {
+            console.log("File uploaded:", req.file.filename, "Size:", req.file.size);
+            movieData = {
+                name: req.body.name || req.body.title, 
+                description: req.body.description,
+                img: `/images/${req.file.filename}` 
+            };
+            console.log("Movie data with image:", movieData);
+        } else {
+            console.log("No file uploaded, using existing image or body data");
+            const providedImg = req.body.img;
+            movieData = {
+                name: req.body.name || req.body.title,
+                description: req.body.description,
+                img: (providedImg !== undefined && providedImg !== "") ? providedImg : existingImg // Keep existing img if not provided or empty
+            };
+        }
+        
+        const { error, value } = movieSchema.validate(movieData, { abortEarly: false });
+        
+        if (error) {
+            const errorMessages = error.details.map(detail => detail.message).join(", ");
+            return res.status(400).json({
+                error: "Validation error",
+                message: errorMessages,
+                details: error.details
+            });
+        }
+        
+        const updatedMovie = {
+            id: movieId,
+            title: value.name || value.title || "", 
+            description: value.description || "",
+            img: movieData.img || existingImg 
+        };
+        
+        movies[movieIndex] = updatedMovie;
+        
+        console.log("Movie updated:", updatedMovie);
+        
+        return res.status(200).json(updatedMovie);
+        
+    } catch (err) {
+        console.error("Error in PUT /api/movies/:id:", err);
+        console.error("Stack trace:", err.stack);
+        
+        if (!res.headersSent) {
+            return res.status(500).json({
+                error: "Internal server error",
+                message: err.message || "An unexpected error occurred"
+            });
+        }
+    }
+};
+
+const handleDeleteMovie = async (req, res) => {
+    try {
+        const movieId = parseInt(req.params.id);
+        console.log(`DELETE /api/movies/${movieId} called`);
+        
+        const movieIndex = movies.findIndex(m => m && m.id === movieId);
+        
+        if (movieIndex === -1) {
+            return res.status(404).json({
+                error: "Movie not found",
+                message: `Movie with ID ${movieId} does not exist`
+            });
+        }
+        
+        const deletedMovie = movies[movieIndex];
+        
+        movies.splice(movieIndex, 1);
+        
+        console.log("Movie deleted:", deletedMovie);
+        
+         return res.status(200).json({
+            message: "Movie deleted successfully",
+            deletedMovie: deletedMovie
+        });
+        
+    } catch (err) {
+        console.error("Error in DELETE /api/movies/:id:", err);
+        console.error("Stack trace:", err.stack);
+        
+        if (!res.headersSent) {
+            return res.status(500).json({
+                error: "Internal server error",
+                message: err.message || "An unexpected error occurred"
+            });
+        }
+    }
+};
+
+app.put("/api/movies/:id", upload.single("img"), handlePutMovie);
+app.put("/api/movies/:id/", upload.single("img"), handlePutMovie);
+
+app.delete("/api/movies/:id", handleDeleteMovie);
+app.delete("/api/movies/:id/", handleDeleteMovie);
 
 app.use((err, req, res, next) => {
     if (res.headersSent) {
         console.error("Error occurred but response already sent:", err.message);
         return next(err);
     }
-
+    
     console.error("Error middleware caught:", err.message);
     console.error("Error stack:", err.stack);
-
+    
     if (err instanceof multer.MulterError) {
         if (err.code === "LIMIT_FILE_SIZE") {
             return res.status(400).json({
@@ -240,14 +325,14 @@ app.use((err, req, res, next) => {
             message: err.message
         });
     }
-
+    
     if (err) {
         return res.status(400).json({
             error: "Validation error",
             message: err.message
         });
     }
-
+    
     next();
 });
 
@@ -264,6 +349,7 @@ process.on("unhandledRejection", (err) => {
 
 process.on("uncaughtException", (err) => {
     console.error("Uncaught Exception:", err);
+    // Give the process a chance to log the error before exiting
     setTimeout(() => {
         process.exit(1);
     }, 1000);
@@ -273,6 +359,9 @@ const server = app.listen(PORT, () => {
     console.log(`Server listening on http://localhost:${PORT}`);
     console.log(`GET endpoint: http://localhost:${PORT}/api/movies`);
     console.log(`POST endpoint: http://localhost:${PORT}/api/movies/`);
+        console.log(`PUT endpoint: http://localhost:${PORT}/api/movies/:id`);
+    console.log(`DELETE endpoint: http://localhost:${PORT}/api/movies/:id`);
+
 });
 
 server.on("error", (err) => {
