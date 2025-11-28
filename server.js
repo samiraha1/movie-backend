@@ -219,7 +219,7 @@ const handlePutMovie = async (req, res) => {
             movieData = {
                 name: req.body.name || req.body.title,
                 description: req.body.description,
-                img: (providedImg !== undefined && providedImg !== "") ? providedImg : existingImg // Keep existing img if not provided or empty
+                img: (providedImg !== undefined && providedImg !== "") ? providedImg : existingImg 
             };
         }
         
@@ -349,7 +349,6 @@ process.on("unhandledRejection", (err) => {
 
 process.on("uncaughtException", (err) => {
     console.error("Uncaught Exception:", err);
-    // Give the process a chance to log the error before exiting
     setTimeout(() => {
         process.exit(1);
     }, 1000);
