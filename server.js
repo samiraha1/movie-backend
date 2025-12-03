@@ -154,6 +154,7 @@ const upload = multer({
     }
 });
 
+<<<<<<< HEAD
 // let movies = [
 //     {
 //         id: 1,
@@ -168,6 +169,22 @@ const upload = multer({
 //         img: "/images/him.jpg"
 //     },
 // ];
+=======
+let movies = [
+    {
+        id: 1,
+        title: "New Demon Slayer Movie",
+        description: "This movie was so good. I definitely recommend...",
+        img: "/images/demon-slayer.png"
+    },
+    {
+        id: 2,
+        title: "Negative Reviews on the movie 'Him'",
+        description: "There have been lots of opinions on the new Him movie...",
+        img: "/images/him.jpg"
+    },
+];
+>>>>>>> a21fa0286955e695e0231e305837b49300193d48
 
 const movieSchema = Joi.object({
     name: Joi.string()
@@ -192,7 +209,11 @@ const movieSchema = Joi.object({
         }),
     img: Joi.string()
         .optional()
+<<<<<<< HEAD
         .allow("") 
+=======
+        .allow("")
+>>>>>>> a21fa0286955e695e0231e305837b49300193d48
         .messages({
             "string.base": "Image path must be a string"
         })
@@ -212,6 +233,7 @@ app.get("/api/test", (req, res) => {
     res.json({ message: "Backend is running!", timestamp: new Date().toISOString() });
 });
 
+<<<<<<< HEAD
 app.get("/api/test-routes", (req, res) => {
     const routes = [];
     app._router.stack.forEach((middleware) => {
@@ -229,6 +251,8 @@ app.get("/api/test-routes", (req, res) => {
     });
 });
 
+=======
+>>>>>>> a21fa0286955e695e0231e305837b49300193d48
 const handlePostMovie = async (req, res) => {
     try {
         console.log("POST /api/movies called");
@@ -261,7 +285,10 @@ const handlePostMovie = async (req, res) => {
             });
         }
         
+<<<<<<< HEAD
         
+=======
+>>>>>>> a21fa0286955e695e0231e305837b49300193d48
         let nextId = 1;
         if (movies.length > 0) {
             const maxId = Math.max(...movies.map(m => (m && m.id) ? m.id : 0));
@@ -294,7 +321,10 @@ const handlePostMovie = async (req, res) => {
     }
 };
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> a21fa0286955e695e0231e305837b49300193d48
 app.post("/api/movies/", upload.single("img"), handlePostMovie);
 app.post("/api/movies", upload.single("img"), handlePostMovie);
 
@@ -392,8 +422,12 @@ const handleDeleteMovie = async (req, res) => {
         
         console.log("Movie deleted:", deletedMovie);
         
+<<<<<<< HEAD
        
         return res.status(200).json({
+=======
+         return res.status(200).json({
+>>>>>>> a21fa0286955e695e0231e305837b49300193d48
             message: "Movie deleted successfully",
             deletedMovie: deletedMovie
         });
@@ -471,8 +505,14 @@ const server = app.listen(PORT, () => {
     console.log(`Server listening on http://localhost:${PORT}`);
     console.log(`GET endpoint: http://localhost:${PORT}/api/movies`);
     console.log(`POST endpoint: http://localhost:${PORT}/api/movies/`);
+<<<<<<< HEAD
     console.log(`PUT endpoint: http://localhost:${PORT}/api/movies/:id`);
     console.log(`DELETE endpoint: http://localhost:${PORT}/api/movies/:id`);
+=======
+        console.log(`PUT endpoint: http://localhost:${PORT}/api/movies/:id`);
+    console.log(`DELETE endpoint: http://localhost:${PORT}/api/movies/:id`);
+
+>>>>>>> a21fa0286955e695e0231e305837b49300193d48
 });
 
 server.on("error", (err) => {
