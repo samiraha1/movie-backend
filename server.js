@@ -26,6 +26,11 @@ const movieSchema = new mongoose.Schema({
 
 const Movie = mongoose.model("Movie", movieSchema);
 
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, "public")));
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         try {
@@ -172,11 +177,6 @@ app.delete("/api/movies/:id", async (req, res) => {
 
   res.status(200).send(movie);
 });
-
-app.use(express.static(path.join(__dirname, "public")));
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
