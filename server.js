@@ -54,7 +54,7 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage: storage,
     limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB
+    fileSize: 5 * 1024 * 1024 
     },
     fileFilter: (req, file, cb) => {
         if (!file) {
@@ -204,7 +204,6 @@ app.get("/api/test-routes", (req, res) => {
   });
 });
 
-// Error handling middleware
 app.use((err, req, res, next) => {
     if (res.headersSent) {
         console.error("Error occurred but response already sent:", err.message);
@@ -237,7 +236,6 @@ app.use((err, req, res, next) => {
     next();
 });
 
-// 404 handler
 app.use((req, res) => {
     res.status(404).json({
         error: "Route not found",
@@ -245,7 +243,6 @@ app.use((req, res) => {
     });
 });
 
-// Error handlers
 process.on("unhandledRejection", (err) => {
     console.error("Unhandled Promise Rejection:", err);
 });
@@ -257,7 +254,6 @@ process.on("uncaughtException", (err) => {
     }, 1000);
 });
 
-// Start server
 const server = app.listen(PORT, () => {
     console.log(`Server listening on http://localhost:${PORT}`);
     console.log(`GET endpoint: http://localhost:${PORT}/api/movies`);
@@ -274,7 +270,6 @@ server.on("error", (err) => {
     }
     process.exit(1);
 });
-
 
 // const express = require("express");
 // const cors = require("cors");
@@ -332,7 +327,7 @@ server.on("error", (err) => {
 // const upload = multer({
 //     storage: storage,
 //     limits: {
-//     fileSize: 5 * 1024 * 1024 
+//     fileSize: 5 * 1024 * 1024 // 5MB
 //     },
 //     fileFilter: (req, file, cb) => {
 //         if (!file) {
@@ -482,6 +477,7 @@ server.on("error", (err) => {
 //   });
 // });
 
+// // Error handling middleware
 // app.use((err, req, res, next) => {
 //     if (res.headersSent) {
 //         console.error("Error occurred but response already sent:", err.message);
@@ -514,6 +510,7 @@ server.on("error", (err) => {
 //     next();
 // });
 
+// // 404 handler
 // app.use((req, res) => {
 //     res.status(404).json({
 //         error: "Route not found",
@@ -521,6 +518,7 @@ server.on("error", (err) => {
 //     });
 // });
 
+// // Error handlers
 // process.on("unhandledRejection", (err) => {
 //     console.error("Unhandled Promise Rejection:", err);
 // });
@@ -532,6 +530,7 @@ server.on("error", (err) => {
 //     }, 1000);
 // });
 
+// // Start server
 // const server = app.listen(PORT, () => {
 //     console.log(`Server listening on http://localhost:${PORT}`);
 //     console.log(`GET endpoint: http://localhost:${PORT}/api/movies`);
@@ -548,4 +547,3 @@ server.on("error", (err) => {
 //     }
 //     process.exit(1);
 // });
-
