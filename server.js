@@ -42,7 +42,7 @@ const Blog = mongoose.model("Blog", blogSchema);
 
 const validateBlog = (blog) => {
     const schema = Joi.object({
-        name: Joi.string()
+        title: Joi.string()
       .min(1)
       .max(200)
       .required()
@@ -90,7 +90,7 @@ app.post("/api/movies", upload.single("img") , async(req, res)=>{
     }
 
     const blog = new Blog({
-        name:req.body.name,
+        title:req.body.title,
         description:req.body.description
     });
 
@@ -114,7 +114,7 @@ app.put("/api/movies/:id", upload.single("img"), async(req, res)=>{
     }
 
     const fieldsToUpdate = {
-        name : req.body.name,
+        title : req.body.title,
         description : req.body.description
     }
     
