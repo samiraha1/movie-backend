@@ -32,7 +32,7 @@ mongoose
   });
 
 const blogSchema = new mongoose.Schema({
-    name:String,
+    title:String,
     description:String,
     main_image:String,
     features:[String]
