@@ -103,8 +103,6 @@ app.post("/api/movies", upload.single("img") , async(req, res)=>{
 });
 
 app.put("/api/movies/:id", upload.single("img"), async(req, res)=>{
-    //console.log(`You are trying to edit ${req.params.id}`);
-    //console.log(req.body);
     const isValidUpdate = validateBlog(req.body);
 
     if(isValidUpdate.error){
